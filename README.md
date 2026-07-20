@@ -217,15 +217,65 @@ You can add more tests in `tests/test_recommender.py`.
 
 ## Sample Recommendation Output
 
-Paste a sample of your recommender's output here as a text block so a reader can see what it produces:
+Running `python src/main.py` with the profile
+`favorite_genre="lofi", favorite_mood="chill", target_energy=0.35, likes_acoustic=True`
+produces:
 
 ```
-# e.g.:
-# User profile: genre=indie, mood=chill, energy=low
-# Recommendations:
-#   1. ...
-#   2. ...
-#   3. ...
+Top recommendations:
+
+-------------------------------------
+1. Library Rain
+Artist: Paper Lanterns
+Score: 5.36
+
+Reasons:
+- Genre match (+2.0)
+- Mood match (+1.5)
+- Energy close (+1.00)
+- Acoustic fit (+0.86)
+
+-------------------------------------
+2. Midnight Coding
+Artist: LoRoom
+Score: 5.14
+
+Reasons:
+- Genre match (+2.0)
+- Mood match (+1.5)
+- Energy close (+0.93)
+- Acoustic fit (+0.71)
+
+-------------------------------------
+3. Focus Flow
+Artist: LoRoom
+Score: 3.73
+
+Reasons:
+- Genre match (+2.0)
+- Energy close (+0.95)
+- Acoustic fit (+0.78)
+
+-------------------------------------
+4. Spacewalk Thoughts
+Artist: Orbit Bloom
+Score: 3.35
+
+Reasons:
+- Mood match (+1.5)
+- Energy close (+0.93)
+- Acoustic fit (+0.92)
+
+-------------------------------------
+5. Coffee Shop Stories
+Artist: Slow Stereo
+Score: 1.87
+
+Reasons:
+- Energy close (+0.98)
+- Acoustic fit (+0.89)
+
+-------------------------------------
 ```
 
 **Screenshot or video** *(optional)*: <!-- Insert a screenshot or demo video link here -->
