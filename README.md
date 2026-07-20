@@ -110,6 +110,74 @@ There are two separate steps:
 So scoring is done once per song, and ranking is what turns all of those
 individual scores into an ordered "Top 5" list.
 
+### The finalized algorithm recipe
+
+1. Read the user's preferences (the `UserProfile`).
+2. Load every song from `data/songs.csv`.
+3. Loop through the songs one at a time and give each a score.
+4. For each song, add up four weighted parts: genre match, mood match, energy
+   closeness, and acoustic fit.
+5. Sort all the songs from the highest score to the lowest.
+6. Return the top `k` songs as the recommendations.
+
+### The chosen UserProfile
+
+For this simulation we use one simple, beginner-friendly profile:
+
+```python
+user_prefs = {
+    "favorite_genre": "lofi",
+    "favorite_mood": "chill",
+    "target_energy": 0.35,
+    "likes_acoustic": True,
+}
+```
+
+This describes someone who wants calm, acoustic-leaning study music.
+
+### The scoring weights
+
+| Part | Weight | How it is scored |
+|------|:------:|------------------|
+| Genre match | **2.0** | `1` if the song's genre equals `favorite_genre`, else `0` |
+| Mood match | **1.5** | `1` if the song's mood equals `favorite_mood`, else `0` |
+| Energy closeness | **1.0** | `1 - abs(song.energy - target_energy)` (closer is better) |
+| Acoustic fit | **1.0** | `song.acousticness` if `likes_acoustic`, else `1 - song.acousticness` |
+
+```
+score = (2.0 * genre_match)
+      + (1.5 * mood_match)
+      + (1.0 * energy_closeness)
+      + (1.0 * acoustic_fit)
+```
+
+**Why these weights are reasonable:** genre is the strongest signal of what a
+listener wants, so it earns the most points, with mood close behind. Energy and
+acoustic fit are "fine-tuning" signals, so they are worth a bit less. Energy
+uses *closeness* (`1 - abs(...)`) instead of the raw value, so a song scores
+highest when its energy is near the user's target — a calm listener is not
+handed the loudest track just because its number is bigger.
+
+### Data flow
+
+```mermaid
+flowchart TD
+    A[User Preferences] --> B[Load songs.csv]
+    B --> C[Loop through every song]
+    C --> D[Calculate score]
+    D --> E[Rank songs by score]
+    E --> F[Return Top K recommendations]
+```
+
+### Expected bias
+
+Because genre carries the heaviest weight, the system tends to over-prioritize
+genre: a song in the user's favorite genre can beat a song that fits their mood,
+energy, and acoustic taste far better but happens to be labeled a different
+genre. This means genuinely good matches can be pushed down the list simply for
+having the "wrong" genre tag, and the recommendations may feel repetitive
+instead of surfacing variety.
+
 ---
 
 ## Getting Started
