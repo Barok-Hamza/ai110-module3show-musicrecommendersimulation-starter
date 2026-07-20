@@ -122,3 +122,53 @@ def recommend_songs(user_prefs: Dict, songs: List[Dict], k: int = 5) -> List[Dic
     ranked = sorted(scored, key=lambda item: item["score"], reverse=True)
 
     return ranked[:k]
+
+# ----------------------------------------------------------------------------
+# PHASE 4 EVALUATION EXPERIMENT ONLY.
+# The two functions below are a copy of the scoring/ranking logic with DIFFERENT
+# weights so we can compare rankings. They do NOT change the real recommender:
+# the original score_song() / recommend_songs() above are left exactly as-is.
+# Experimental weights: genre 1.0 (down), mood 1.5 (same), energy 2.0 (up),
+# acoustic 1.0 (same).
+# ----------------------------------------------------------------------------
+
+def score_song_experiment(user_prefs: Dict, song: Dict) -> Tuple[float, List[str]]:
+    """Experimental score: lower genre weight (1.0) and double energy weight (2.0)."""
+    score = 0.0
+    reasons = []
+
+    # Genre match now worth only +1.0 (down from +2.0).
+    if song["genre"] == user_prefs["favorite_genre"]:
+        score += 1.0
+        reasons.append("Genre match (+1.0)")
+
+    # Mood match unchanged at +1.5.
+    if song["mood"] == user_prefs["favorite_mood"]:
+        score += 1.5
+        reasons.append("Mood match (+1.5)")
+
+    # Energy closeness is now doubled: energy_score stays in [0, 1], so the
+    # contribution stays in a valid [0, 2] range.
+    energy_score = 1 - abs(song["energy"] - user_prefs["target_energy"])
+    score += 2.0 * energy_score
+    reasons.append(f"Energy close (+{2.0 * energy_score:.2f})")
+
+    # Acoustic fit unchanged at +1.0.
+    if user_prefs["likes_acoustic"]:
+        acoustic_score = song["acousticness"]
+    else:
+        acoustic_score = 1 - song["acousticness"]
+    score += acoustic_score
+    reasons.append(f"Acoustic fit (+{acoustic_score:.2f})")
+
+    return score, reasons
+
+def recommend_songs_experiment(user_prefs: Dict, songs: List[Dict], k: int = 5) -> List[Dict]:
+    """Same ranking as recommend_songs, but using the experimental weights."""
+    scored = []
+    for song in songs:
+        score, reasons = score_song_experiment(user_prefs, song)
+        scored.append({"song": song, "score": score, "reasons": reasons})
+
+    ranked = sorted(scored, key=lambda item: item["score"], reverse=True)
+    return ranked[:k]
