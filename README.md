@@ -17,17 +17,98 @@ Replace this paragraph with your own summary of what your version does.
 
 ## How The System Works
 
-Explain your design in plain language.
+### How real recommendation systems work
 
-Some prompts to answer:
+Apps like Spotify, YouTube Music, and TikTok are always trying to guess what
+you will enjoy next. They mostly do this in two ways:
 
-- What features does each `Song` use in your system
-  - For example: genre, mood, energy, tempo
-- What information does your `UserProfile` store
-- How does your `Recommender` compute a score for each song
-- How do you choose which songs to recommend
+- **Collaborative filtering** — "people who liked what you like also liked
+  this." The app looks at millions of other listeners and finds people with
+  similar taste, then recommends songs those similar people enjoyed. It never
+  needs to understand the music itself; it only needs your behavior (likes,
+  skips, replays, listening history, saved playlists) compared to everyone
+  else's.
+- **Content-based filtering** — "here is another song that *sounds like* what
+  you already enjoy." Instead of comparing you to other people, the app
+  compares songs to each other using their features (genre, mood, energy,
+  tempo, and so on) and recommends the ones that most closely match your
+  taste.
 
-You can include a simple diagram or bullet list if helpful.
+The big real apps blend both, plus signals like time of day, device, and
+whether you skipped a track in the first few seconds.
+
+### What this project does
+
+**This project uses content-based filtering.** We do not have data about other
+users, so we cannot compare listeners. Instead we describe each song with a
+handful of features, describe the user's taste with a small profile, and score
+every song by how well it matches that profile.
+
+### What each `Song` stores
+
+Each song is loaded from `data/songs.csv` and keeps these features:
+
+- `genre` and `mood` — **categorical** labels (e.g. `pop`, `lofi`, `chill`,
+  `intense`)
+- `energy`, `tempo_bpm`, `valence`, `danceability`, `acousticness` —
+  **numerical** audio features
+- `id`, `title`, `artist` — identifying information used for display, not for
+  scoring
+
+### What the `UserProfile` stores
+
+The user's taste is kept as a small profile:
+
+- `favorite_genre` — the genre they most want to hear
+- `favorite_mood` — the mood they are in
+- `target_energy` — the energy level they are aiming for (0.0 = calm,
+  1.0 = high energy)
+- `likes_acoustic` — whether they prefer acoustic-sounding songs
+
+### How weighted scoring works
+
+The `Recommender` gives every song a single **score** that says how well it
+matches the user. Each feature contributes points, and more important features
+are given a bigger **weight**:
+
+- **Categorical match (genre, mood):** award full points when the song's label
+  exactly matches the user's preference, and no points when it does not.
+- **Numerical closeness (energy):** reward songs whose value is *close* to the
+  user's target — not simply the largest value. A song scores highest when its
+  energy is near `target_energy` and loses points the farther away it is.
+- **Boolean preference (acoustic):** if the user likes acoustic music, give
+  more points to songs with higher `acousticness` (and the reverse if they do
+  not).
+
+Although each `Song` object stores additional attributes like `tempo_bpm`,
+`valence`, and `danceability`, the first version of the recommender will only
+use `genre`, `mood`, `energy`, and `acousticness` for scoring to keep the
+implementation simple and beginner-friendly.
+
+Roughly:
+
+```
+score = (w_genre  * genre_match)
+      + (w_mood   * mood_match)
+      + (w_energy * energy_closeness)
+      + (w_acoustic * acoustic_fit)
+```
+
+A reasonable starting point is to weight genre and mood most heavily (they are
+the strongest taste signals), with energy and acoustic fit contributing a bit
+less.
+
+### How ranking works
+
+There are two separate steps:
+
+1. **Scoring one song** answers "how good is *this* song for this user?" and
+   returns a single number.
+2. **Ranking all songs** scores *every* song in the catalog, sorts them from
+   highest to lowest, and returns the top `k` as the recommendations.
+
+So scoring is done once per song, and ranking is what turns all of those
+individual scores into an ordered "Top 5" list.
 
 ---
 
